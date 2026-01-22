@@ -10,6 +10,8 @@ mind-map also provides a standalone mind map client. Learn more about the [Clien
 
 Download standalone client(Windows、macOS、Linux): [Click here](https://github.com/wanglin2/mind-map/releases)
 
+Install: [中文](./docs/install_zh.md) | [English](./docs/install.md)
+
 Changelog: [中文](./docs/changelog_zh.md) | [English](./docs/changelog.md)
 
 Help: [中文](./docs/help_zh.md) | [English](./docs/help.md)
