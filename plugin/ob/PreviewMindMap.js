@@ -11,15 +11,7 @@ export class PreviewMindMap {
     this.container = document.createElement('div')
     this.wrap = document.createElement('div')
     this.container.appendChild(this.wrap)
-    this.container.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 50;
-      background: rgba(0, 0, 0, 0.5);
-    `
+    this.container.classList.add('smm-preview-md-to-mindmap-container')
     document.body.appendChild(this.container)
     this._renderView()
   }

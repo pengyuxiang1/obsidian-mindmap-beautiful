@@ -433,7 +433,6 @@ export default class SimpleMindMapPlugin extends Plugin {
   }
 
   onunload() {
-    this.app.workspace.detachLeavesOfType(SMM_VIEW_TYPE)
     this.markdownPostProcessor.destroy()
     this.statusBarItem?.remove()
     this.commands.clear()

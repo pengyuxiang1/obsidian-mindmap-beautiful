@@ -17,9 +17,11 @@ export default class MarkdownPostProcessor {
     this.handleFileDelete = this.handleFileDelete.bind(this)
     this.handleModifySvgName = this.handleModifySvgName.bind(this)
 
-    plugin.app.vault.on('modify', this.handleFileModify)
-    plugin.app.vault.on('delete', this.handleFileDelete)
-    plugin.app.vault.on('rename', this.handleModifySvgName)
+    plugin.registerEvent(plugin.app.vault.on('modify', this.handleFileModify))
+    plugin.registerEvent(plugin.app.vault.on('delete', this.handleFileDelete))
+    plugin.registerEvent(
+      plugin.app.vault.on('rename', this.handleModifySvgName)
+    )
   }
 
   destroy() {

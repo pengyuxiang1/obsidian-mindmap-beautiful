@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, Notice } from 'obsidian'
+import { PluginSettingTab, Setting, Notice, normalizePath } from 'obsidian'
 import themeList from 'simple-mind-map-plugin-themes/themeList'
 import { layoutGroupList } from '../src/config'
 import { GITHUB_ICON, COMMUNITY_ICON } from './constant'
@@ -46,15 +46,11 @@ export default class SmmSettingTab extends PluginSettingTab {
 
     this._addEmbedSetting()
 
-    this._addOtherSetting()
-
     this._addHelpInfo()
   }
 
   _addBaseSetting() {
     const { containerEl } = this
-
-    containerEl.createEl('h2', { text: this.plugin._t('setting.title.title1') })
 
     new Setting(containerEl)
       .setName(this.plugin._t('setting.autoSave.title'))
@@ -170,7 +166,7 @@ export default class SmmSettingTab extends PluginSettingTab {
   _addFileSaveSetting() {
     const { containerEl } = this
 
-    containerEl.createEl('h2', { text: this.plugin._t('setting.title.title2') })
+    this._setHeader(containerEl, this.plugin._t('setting.title.title2'))
 
     new Setting(containerEl)
       .setName(this.plugin._t('setting.file.title1'))
@@ -242,11 +238,11 @@ export default class SmmSettingTab extends PluginSettingTab {
       .setDesc(this.plugin._t('setting.folder.desc1'))
       .addText(text => {
         text.setValue(this.plugin.settings.filePath).onChange(async value => {
-          this.plugin.settings.filePath = value
+          this.plugin.settings.filePath = normalizePath(value)
           await this.plugin._saveSettings()
         })
         this._addFolderSelectBtn(text, selected => {
-          this.plugin.settings.filePath = selected
+          this.plugin.settings.filePath = normalizePath(selected)
           this.plugin._saveSettings()
         })
       })
@@ -273,11 +269,11 @@ export default class SmmSettingTab extends PluginSettingTab {
       .setDesc(this.plugin._t('setting.folder.desc2'))
       .addText(text => {
         text.setValue(this.plugin.settings.imagePath).onChange(async value => {
-          this.plugin.settings.imagePath = value
+          this.plugin.settings.imagePath = normalizePath(value)
           await this.plugin._saveSettings()
         })
         this._addFolderSelectBtn(text, selected => {
-          this.plugin.settings.imagePath = selected
+          this.plugin.settings.imagePath = normalizePath(selected)
           this.plugin._saveSettings()
         })
       })
@@ -289,11 +285,11 @@ export default class SmmSettingTab extends PluginSettingTab {
         text
           .setValue(this.plugin.settings.imageSubPath)
           .onChange(async value => {
-            this.plugin.settings.imageSubPath = value
+            this.plugin.settings.imageSubPath = normalizePath(value)
             await this.plugin._saveSettings()
           })
         this._addFolderSelectBtn(text, selected => {
-          this.plugin.settings.imageSubPath = selected
+          this.plugin.settings.imageSubPath = normalizePath(selected)
           this.plugin._saveSettings()
         })
       })
@@ -322,11 +318,11 @@ export default class SmmSettingTab extends PluginSettingTab {
         text
           .setValue(this.plugin.settings.attachmentPath)
           .onChange(async value => {
-            this.plugin.settings.attachmentPath = value
+            this.plugin.settings.attachmentPath = normalizePath(value)
             await this.plugin._saveSettings()
           })
         this._addFolderSelectBtn(text, selected => {
-          this.plugin.settings.attachmentPath = selected
+          this.plugin.settings.attachmentPath = normalizePath(selected)
           this.plugin._saveSettings()
         })
       })
@@ -393,7 +389,7 @@ export default class SmmSettingTab extends PluginSettingTab {
   _addCompressSetting() {
     const { containerEl } = this
 
-    containerEl.createEl('h2', { text: this.plugin._t('setting.title.title3') })
+    this._setHeader(containerEl, this.plugin._t('setting.title.title3'))
 
     new Setting(containerEl)
       .setName(this.plugin._t('setting.compress.title1'))
@@ -494,7 +490,7 @@ export default class SmmSettingTab extends PluginSettingTab {
   _addEmbedSetting() {
     const { containerEl } = this
 
-    containerEl.createEl('h2', { text: this.plugin._t('setting.title.title4') })
+    this._setHeader(containerEl, this.plugin._t('setting.title.title4'))
 
     new Setting(containerEl)
       .setName(this.plugin._t('setting.embed.title3'))
@@ -612,72 +608,76 @@ export default class SmmSettingTab extends PluginSettingTab {
   _updateEmbedImageFileFolderSettingsVisibility() {
     const isVisible = this.plugin.settings.embedImageIsSeparateFile
     if (this.embedImageIsSeparateFileFolderSettings) {
-      this.embedImageIsSeparateFileFolderSettings.settingEl.style.display = isVisible
-        ? ''
-        : 'none'
+      this.embedImageIsSeparateFileFolderSettings.settingEl.classList[
+        isVisible ? 'remove' : 'add'
+      ]('smm-setting-item-hide')
     }
   }
 
   _updateFilePathSettingsVisibility() {
     const isVisible = this.plugin.settings.filePathType === 'custom'
     if (this.filePathSettings) {
-      this.filePathSettings.settingEl.style.display = isVisible ? '' : 'none'
+      this.filePathSettings.settingEl.classList[isVisible ? 'remove' : 'add'](
+        'smm-setting-item-hide'
+      )
     }
   }
 
   _updateImagePathSettingsVisibility() {
     const isVisible = this.plugin.settings.imagePathType === 'custom'
     if (this.imagePathSettings) {
-      this.imagePathSettings.settingEl.style.display = isVisible ? '' : 'none'
+      this.imagePathSettings.settingEl.classList[isVisible ? 'remove' : 'add'](
+        'smm-setting-item-hide'
+      )
     }
     const isVisibleSub =
       this.plugin.settings.imagePathType === 'currentFileFolderSubFolder'
     if (this.imageSubPathSettings) {
-      this.imageSubPathSettings.settingEl.style.display = isVisibleSub
-        ? ''
-        : 'none'
+      this.imageSubPathSettings.settingEl.classList[
+        isVisibleSub ? 'remove' : 'add'
+      ]('smm-setting-item-hide')
     }
   }
 
   _updateAttachmentPathSettingsVisibility() {
     const isVisible = this.plugin.settings.attachmentPathType === 'custom'
     if (this.attachmentPathSettings) {
-      this.attachmentPathSettings.settingEl.style.display = isVisible
-        ? ''
-        : 'none'
+      this.attachmentPathSettings.settingEl.classList[
+        isVisible ? 'remove' : 'add'
+      ]('smm-setting-item-hide')
     }
     const isVisibleSub =
       this.plugin.settings.attachmentPathType === 'currentFileFolderSubFolder'
     if (this.attachmentSubPathSettings) {
-      this.attachmentSubPathSettings.settingEl.style.display = isVisibleSub
-        ? ''
-        : 'none'
+      this.attachmentSubPathSettings.settingEl.classList[
+        isVisibleSub ? 'remove' : 'add'
+      ]('smm-setting-item-hide')
     }
   }
 
   _updateCompressImageSettingsVisibility() {
     const isVisible = this.plugin.settings.compressImage
     if (this.compressImageOptionsMaxWidthSettings) {
-      this.compressImageOptionsMaxWidthSettings.settingEl.style.display = isVisible
-        ? ''
-        : 'none'
+      this.compressImageOptionsMaxWidthSettings.settingEl.classList[
+        isVisible ? 'remove' : 'add'
+      ]('smm-setting-item-hide')
     }
     if (this.compressImageOptionsMaxHeightSettings) {
-      this.compressImageOptionsMaxHeightSettings.settingEl.style.display = isVisible
-        ? ''
-        : 'none'
+      this.compressImageOptionsMaxHeightSettings.settingEl.classList[
+        isVisible ? 'remove' : 'add'
+      ]('smm-setting-item-hide')
     }
     if (this.compressImageOptionsQualitySettings) {
-      this.compressImageOptionsQualitySettings.settingEl.style.display = isVisible
-        ? ''
-        : 'none'
+      this.compressImageOptionsQualitySettings.settingEl.classList[
+        isVisible ? 'remove' : 'add'
+      ]('smm-setting-item-hide')
     }
   }
 
   _addImageHostingSetting() {
     const { containerEl } = this
 
-    containerEl.createEl('h2', { text: this.plugin._t('setting.title.title6') })
+    this._setHeader(containerEl, this.plugin._t('setting.title.title6'))
 
     // 是否开启图床
     new Setting(containerEl)
@@ -752,7 +752,12 @@ export default class SmmSettingTab extends PluginSettingTab {
   _addOtherSetting() {
     const { containerEl } = this
 
-    containerEl.createEl('h2', { text: this.plugin._t('setting.title.title5') })
+    this._setHeader(containerEl, this.plugin._t('setting.title.title5'))
+  }
+
+  // 设置标题
+  _setHeader(containerEl, title) {
+    new Setting(containerEl).setName(title).setHeading()
   }
 
   _addHelpInfo() {

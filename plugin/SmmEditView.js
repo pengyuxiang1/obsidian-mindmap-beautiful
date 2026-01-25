@@ -31,11 +31,7 @@ class SmmEditView extends TextFileView {
     this.plugin = plugin
     this.contentEl.style.padding = 0
     this.warpEl = this.contentEl.createDiv('smmMindmapEditContainer')
-    this.warpEl.style.cssText = `
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    `
+    this.warpEl.classList.add('smm-common-full-size')
     this.mindMapData = ''
     this.parsedMindMapData = null
     this.mindMapAPP = null
@@ -182,11 +178,7 @@ class SmmEditView extends TextFileView {
   _renderMindMap() {
     this.warpEl.empty()
     const el = this.warpEl.createDiv('smmMindMapEdit')
-    el.style.cssText = `
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    `
+    el.classList.add('smm-common-full-size')
     this._clearObserver()
     this.resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
@@ -455,7 +447,7 @@ class SmmEditView extends TextFileView {
       if (!cover) {
         let counter = 1
         while (
-          await this.app.vault.adapter.exists(
+          this.app.vault.getFileByPath(
             folder ? `${folder}/${fileName}` : fileName
           )
         ) {
@@ -631,16 +623,6 @@ class SmmEditView extends TextFileView {
     this.toggleReadonlyButton = null
   }
 
-  _debounce(func, wait) {
-    let timeout
-    return () => {
-      clearTimeout(timeout)
-      timeout = setTimeout(() => {
-        func.call(this)
-      }, wait)
-    }
-  }
-
   _addActionBtns() {
     const viewActions = this.headerEl.querySelector('.view-actions')
 
@@ -747,6 +729,7 @@ class SmmEditView extends TextFileView {
         this.forceSaveAndUpdateImage()
       }
     )
+    this.saveButton.classList.add('smm-save-button-default')
 
     this.savingTipEl = this.headerEl.createEl('div', {
       cls: 'smm-save-tip'
@@ -794,20 +777,28 @@ class SmmEditView extends TextFileView {
   _showButtons(list) {
     list.forEach(el => {
       if (!el) return
-      el.style.display = 'flex'
+      el.classList.remove('smm-common-hide')
+      el.classList.add('smm-common-flex')
     })
   }
 
   _hideButtons(list) {
     list.forEach(el => {
       if (!el) return
-      el.style.display = 'none'
+      el.classList.remove('smm-common-flex')
+      el.classList.add('smm-common-hide')
     })
   }
 
   _setIsUnSave(isUnSave) {
     this.isUnSave = isUnSave
-    this.saveButton.style.color = isUnSave ? '#ff6600' : 'var(--icon-color)'
+    if (isUnSave) {
+      this.saveButton.classList.remove('smm-save-button-default')
+      this.saveButton.classList.add('smm-save-button-un-save')
+    } else {
+      this.saveButton.classList.remove('smm-save-button-un-save')
+      this.saveButton.classList.add('smm-save-button-default')
+    }
   }
 
   _initThemeMode() {

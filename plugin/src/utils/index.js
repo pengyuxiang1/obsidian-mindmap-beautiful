@@ -1,4 +1,5 @@
 import { nodeRichTextToTextWithWrap } from 'simple-mind-map/src/utils/index.js'
+import { Platform } from 'obsidian'
 
 const getOnfullscreEnevt = () => {
   if (document.documentElement.requestFullScreen) {
@@ -36,7 +37,7 @@ export const fileToBuffer = file => {
 
 export const copy = text => {
   const input = document.createElement('textarea')
-  input.innerHTML = text
+  input.value = text
   document.body.appendChild(input)
   input.select()
   document.execCommand('copy')
@@ -409,5 +410,5 @@ export const tFileToFile = async function(tfile, app, mimeTypes = {}) {
 }
 
 export const checkIsMac = () => {
-  return navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  return Platform.isMacOS
 }
