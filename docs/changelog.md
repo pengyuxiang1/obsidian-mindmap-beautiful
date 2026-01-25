@@ -207,3 +207,7 @@
 12. Improved text visibility in dark theme for level-3+ node text editors (fixed similar background/text colors).  
 13. Added filename length validation and warning for Excel exports.  
 14. Improved dark mode styling in file list dialogs.
+
+# v0.1.6
+**Fixes**:
+1. Fixed the issue where when dragging image files directly onto a node, they are uploaded to the attachment directory instead of the image directory;
