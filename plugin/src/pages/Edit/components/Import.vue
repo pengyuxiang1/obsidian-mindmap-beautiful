@@ -97,7 +97,7 @@
 <script>
 import xmind from 'simple-mind-map/src/parse/xmind.js'
 import markdown from 'simple-mind-map/src/parse/markdown.js'
-import txt from 'simple-mind-map/src/parse/txt.js'
+import txt from '@/utils/txt.js'
 import { mapMutations } from 'vuex'
 import { base64ToFile, tFileToFile } from '@/utils'
 import { getDataFromDt } from '@/components/ImgUpload/utils'

@@ -124,6 +124,7 @@ import OuterFrame from 'simple-mind-map/src/plugins/OuterFrame.js'
 import MindMapLayoutPro from 'simple-mind-map/src/plugins/MindMapLayoutPro.js'
 import NodeBase64ImageStorage from 'simple-mind-map/src/plugins/NodeBase64ImageStorage.js'
 import Themes from 'simple-mind-map-plugin-themes'
+import { registerCustomThemes } from '@/customThemes'
 import { isSameObject, getImageSize } from 'simple-mind-map/src/utils/index.js'
 import OutlineSidebar from './OutlineSidebar.vue'
 import Style from './Style.vue'
@@ -187,6 +188,8 @@ MindMap.usePlugin(MiniMap)
   .usePlugin(RichText)
 
 Themes.init(MindMap)
+// 注册自定义主题
+registerCustomThemes(MindMap)
 
 export default {
   mixins: [imgHostingUpload],

@@ -279,7 +279,7 @@ import {
   copyNodeTree
 } from 'simple-mind-map/src/utils'
 import { transformToMarkdown } from 'simple-mind-map/src/parse/toMarkdown'
-import txt from 'simple-mind-map/src/parse/txt'
+import txt from '@/utils/txt.js'
 import { setDataToClipboard, setImgToClipboard, copy } from '@/utils'
 
 export default {

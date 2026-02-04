@@ -32,6 +32,7 @@ import Sidebar from './Sidebar.vue'
 import { mapState, mapMutations } from 'vuex'
 import themeImgMap from 'simple-mind-map-plugin-themes/themeImgMap'
 import themeList from 'simple-mind-map-plugin-themes/themeList'
+import { customThemeList } from '@/customThemes'
 
 export default {
   components: {
@@ -54,7 +55,8 @@ export default {
           value: 'default',
           dark: false
         },
-        ...themeList
+        ...themeList,
+        ...customThemeList  // 添加自定义主题
       ].reverse(),
       themeImgMap,
       theme: '',

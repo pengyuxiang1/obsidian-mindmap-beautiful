@@ -1,0 +1,235 @@
+# 修复文本编辑框问题
+# 
+# 问题描述：
+# 1. 当使用 customInnerElsAppendTo 配置将文本编辑框添加到自定义容器时，
+#    编辑框的位置计算没有考虑容器的偏移，导致文字编辑时位置不准确。
+# 2. 编辑框背景色在节点透明时默认为白色，与深色主题不协调。
+#
+# 解决方案：
+# 1. 在 TextEdit.js 和 RichText.js 中添加对 handleElPositionOnCustomInnerElsAppendTo 回调的支持
+# 2. 当使用 customInnerElsAppendTo 时，将编辑框的 position 从 fixed 改为 absolute
+# 3. 优化 getBackground 方法，节点透明时优先使用主题背景色
+#
+# 应用方法：
+# 在 npm install 后，手动应用此补丁到以下文件：
+# - node_modules/simple-mind-map/src/core/render/TextEdit.js
+# - node_modules/simple-mind-map/src/plugins/RichText.js
+
+================================================================================
+文件: node_modules/simple-mind-map/src/core/render/TextEdit.js
+================================================================================
+
+【修复 1】在创建 textEditNode 时，动态设置 position 样式
+
+找到（约第 313-330 行）：
+```javascript
+    if (!this.textEditNode) {
+      this.textEditNode = document.createElement('div')
+      this.textEditNode.classList.add(SMM_NODE_EDIT_WRAP)
+      this.textEditNode.style.cssText = `
+        position: fixed;
+        box-sizing: border-box;
+        ...
+```
+
+替换为：
+```javascript
+    if (!this.textEditNode) {
+      this.textEditNode = document.createElement('div')
+      this.textEditNode.classList.add(SMM_NODE_EDIT_WRAP)
+      // 如果有自定义容器，使用 absolute 定位
+      const positionStyle = customInnerElsAppendTo ? 'absolute' : 'fixed'
+      this.textEditNode.style.cssText = `
+        position: ${positionStyle};
+        box-sizing: border-box;
+        ...
+```
+
+【修复 2】在 showEditTextBox 方法中，找到（约第 382-396 行）：
+```javascript
+this.textEditNode.style.minWidth =
+  rect.width + this.textNodePaddingX * 2 + 'px'
+this.textEditNode.style.minHeight = rect.height + 'px'
+this.textEditNode.style.left = Math.floor(rect.left) + 'px'
+this.textEditNode.style.top = Math.floor(rect.top) + 'px'
+this.textEditNode.style.display = 'block'
+```
+
+替换为：
+```javascript
+this.textEditNode.style.minWidth =
+  rect.width + this.textNodePaddingX * 2 + 'px'
+this.textEditNode.style.minHeight = rect.height + 'px'
+// 处理自定义容器的位置偏移
+let finalLeft = Math.floor(rect.left)
+let finalTop = Math.floor(rect.top)
+const { handleElPositionOnCustomInnerElsAppendTo } = this.mindMap.opt
+if (typeof handleElPositionOnCustomInnerElsAppendTo === 'function') {
+  const pos = handleElPositionOnCustomInnerElsAppendTo(finalLeft, finalTop)
+  finalLeft = pos.left
+  finalTop = pos.top
+}
+this.textEditNode.style.left = finalLeft + 'px'
+this.textEditNode.style.top = finalTop + 'px'
+this.textEditNode.style.display = 'block'
+```
+
+在 updateTextEditNode 方法中，找到：
+```javascript
+this.textEditNode.style.left = Math.floor(rect.left) + 'px'
+this.textEditNode.style.top = Math.floor(rect.top) + 'px'
+```
+
+替换为：
+```javascript
+// 处理自定义容器的位置偏移
+let finalLeft = Math.floor(rect.left)
+let finalTop = Math.floor(rect.top)
+const { handleElPositionOnCustomInnerElsAppendTo } = this.mindMap.opt
+if (typeof handleElPositionOnCustomInnerElsAppendTo === 'function') {
+  const pos = handleElPositionOnCustomInnerElsAppendTo(finalLeft, finalTop)
+  finalLeft = pos.left
+  finalTop = pos.top
+}
+this.textEditNode.style.left = finalLeft + 'px'
+this.textEditNode.style.top = finalTop + 'px'
+```
+
+【修复 3】优化 getBackground 方法，节点透明时优先使用主题背景色
+
+找到（约第 458-476 行）：
+```javascript
+  // 获取编辑区域的背景填充
+  getBackground(node) {
+    const gradientStyle = node.style.merge('gradientStyle')
+    // 当前使用的是渐变色背景
+    if (gradientStyle) {
+      const startColor = node.style.merge('startColor')
+      const endColor = node.style.merge('endColor')
+      return `linear-gradient(to right, ${startColor}, ${endColor})`
+    } else {
+      // 单色背景
+      const bgColor = node.style.merge('fillColor')
+      const color = node.style.merge('color')
+      // 默认使用节点的填充色，否则如果节点颜色是白色的话编辑时看不见
+      return bgColor === 'transparent'
+        ? isWhite(color)
+          ? getVisibleColorFromTheme(this.mindMap.themeConfig)
+          : '#fff'
+        : bgColor
+    }
+  }
+```
+
+替换为：
+```javascript
+  // 获取编辑区域的背景填充
+  getBackground(node) {
+    const gradientStyle = node.style.merge('gradientStyle')
+    // 当前使用的是渐变色背景
+    if (gradientStyle) {
+      const startColor = node.style.merge('startColor')
+      const endColor = node.style.merge('endColor')
+      return `linear-gradient(to right, ${startColor}, ${endColor})`
+    } else {
+      // 单色背景
+      const bgColor = node.style.merge('fillColor')
+      // 如果节点有填充色且不是透明，使用节点填充色
+      if (bgColor && bgColor !== 'transparent') {
+        return bgColor
+      }
+      // 节点背景透明时，尝试获取主题背景色
+      const themeConfig = this.mindMap.themeConfig
+      if (themeConfig && themeConfig.backgroundColor) {
+        const themeBgColor = themeConfig.backgroundColor
+        // 如果主题背景色有效（非透明非白色），使用主题背景色
+        if (themeBgColor && themeBgColor !== 'transparent' && !isWhite(themeBgColor)) {
+          return themeBgColor
+        }
+      }
+      // 否则从主题中获取一个可见颜色
+      const color = node.style.merge('color')
+      return isWhite(color)
+        ? getVisibleColorFromTheme(this.mindMap.themeConfig)
+        : '#fff'
+    }
+  }
+```
+
+================================================================================
+文件: node_modules/simple-mind-map/src/plugins/RichText.js
+================================================================================
+
+【修复 1】在创建 textEditNode 时，动态设置 position 样式
+
+找到（约第 235-250 行）：
+```javascript
+    if (!this.textEditNode) {
+      this.textEditNode = document.createElement('div')
+      this.textEditNode.classList.add('smm-richtext-node-edit-wrap')
+      this.textEditNode.style.cssText = `
+        position:fixed;
+        box-sizing: border-box;
+        ...
+```
+
+替换为：
+```javascript
+    if (!this.textEditNode) {
+      this.textEditNode = document.createElement('div')
+      this.textEditNode.classList.add('smm-richtext-node-edit-wrap')
+      // 如果有自定义容器，使用 absolute 定位
+      const positionStyle = customInnerElsAppendTo ? 'absolute' : 'fixed'
+      this.textEditNode.style.cssText = `
+        position:${positionStyle};
+        box-sizing: border-box;
+        ...
+```
+
+【修复 2】在 showEditText 方法中，找到：
+```javascript
+this.textEditNode.style.minWidth = originWidth + paddingX * 2 + 'px'
+this.textEditNode.style.minHeight = originHeight + 'px'
+this.textEditNode.style.left = rect.left + 'px'
+this.textEditNode.style.top = rect.top + 'px'
+this.textEditNode.style.display = 'block'
+```
+
+替换为：
+```javascript
+this.textEditNode.style.minWidth = originWidth + paddingX * 2 + 'px'
+this.textEditNode.style.minHeight = originHeight + 'px'
+// 处理自定义容器的位置偏移
+let finalLeft = rect.left
+let finalTop = rect.top
+const { handleElPositionOnCustomInnerElsAppendTo } = this.mindMap.opt
+if (typeof handleElPositionOnCustomInnerElsAppendTo === 'function') {
+  const pos = handleElPositionOnCustomInnerElsAppendTo(finalLeft, finalTop)
+  finalLeft = pos.left
+  finalTop = pos.top
+}
+this.textEditNode.style.left = finalLeft + 'px'
+this.textEditNode.style.top = finalTop + 'px'
+this.textEditNode.style.display = 'block'
+```
+
+在 updateTextEditNode 方法中，找到：
+```javascript
+this.textEditNode.style.left = rect.left + 'px'
+this.textEditNode.style.top = rect.top + 'px'
+```
+
+替换为：
+```javascript
+// 处理自定义容器的位置偏移
+let finalLeft = rect.left
+let finalTop = rect.top
+const { handleElPositionOnCustomInnerElsAppendTo } = this.mindMap.opt
+if (typeof handleElPositionOnCustomInnerElsAppendTo === 'function') {
+  const pos = handleElPositionOnCustomInnerElsAppendTo(finalLeft, finalTop)
+  finalLeft = pos.left
+  finalTop = pos.top
+}
+this.textEditNode.style.left = finalLeft + 'px'
+this.textEditNode.style.top = finalTop + 'px'
+```
